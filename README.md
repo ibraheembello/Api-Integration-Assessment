@@ -2,7 +2,7 @@
 
 A modular, high-performance RESTful API built to integrate with the external Genderize API, process the incoming data based on specific business logic, and return a strictly formatted JSON response.
 
-**Live API URL:** `[https://api-integration-assessment.vercel.app/api/classify?name=john]`
+**Live API URL:** [Success Response](https://api-integration-assessment.vercel.app/api/classify?name=john)
 
 ---
 
