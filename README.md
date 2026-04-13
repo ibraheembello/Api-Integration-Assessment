@@ -16,8 +16,6 @@ Experience the API directly through our polished web interface:
 
 ### **Application Preview**
 ![Gender Classifier UI](https://raw.githubusercontent.com/ibraheembello/Api-Integration-Assessment/main/screenshot.png)
-*(Note: Please ensure you upload a 'screenshot.png' to your repository root to display this image correctly.)*
-
 ---
 
 ## ✨ Features
