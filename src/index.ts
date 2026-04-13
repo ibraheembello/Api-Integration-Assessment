@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import classifyRoutes from "./routes/classify.routes";
@@ -26,7 +27,8 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ["./src/routes/*.ts"],
+  // Use path.join to ensure correct file resolution on Vercel
+  apis: [path.join(__dirname, "./routes/*.ts"), path.join(__dirname, "./routes/*.js")],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
@@ -174,7 +176,8 @@ app.use("*", (req: Request, res: Response) => {
 // Global Error Handler
 app.use(errorMiddleware);
 
-if (process.env.NODE_ENV !== "test") {
+// Only listen when not running on Vercel
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   app.listen(config.port, () => {
     logger.info(`Server is running on port ${config.port} in ${config.env} mode`);
     logger.info(`Swagger UI available at http://localhost:${config.port}/api-docs`);

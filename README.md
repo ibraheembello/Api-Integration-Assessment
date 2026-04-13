@@ -2,7 +2,7 @@
 
 A professional, high-performance Node.js/TypeScript API designed to classify names by gender using the [Genderize.io](https://genderize.io/) service. This project features robust error handling, caching, rate limiting, and interactive documentation.
 
-[![CI](https://github.com/ibraheembello/Api-Integration-Assessment/actions/workflows/ci.yml/badge.svg)](https://github.com/ibraheembello/Api-Integration-Assessment/actions/workflows/ci.yml)
+[![CI](https://github.com/ibraheembello/Api-Integration-Assessment/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ibraheembello/Api-Integration-Assessment/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://api-integration-assessment.vercel.app/)
 [![Swagger Docs](https://img.shields.io/badge/API-Docs-blue)](https://api-integration-assessment.vercel.app/api-docs)
 
