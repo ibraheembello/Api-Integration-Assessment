@@ -13,7 +13,7 @@ import { rateLimiter } from "./middleware/rate-limit.middleware";
 const app: Application = express();
 
 // Swagger configuration
-const swaggerOptions = {
+const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
     info: {
@@ -24,11 +24,17 @@ const swaggerOptions = {
     servers: [
       {
         url: config.env === "development" ? `http://localhost:${config.port}` : "https://api-integration-assessment.vercel.app/",
+        description: config.env === "development" ? "Local server" : "Production server",
       },
     ],
   },
-  // Use path.join to ensure correct file resolution on Vercel
-  apis: [path.join(__dirname, "./routes/*.ts"), path.join(__dirname, "./routes/*.js")],
+  // Broaden patterns to ensure Swagger finds the route files in any environment
+  apis: [
+    path.join(process.cwd(), "src/routes/*.ts"),
+    path.join(process.cwd(), "dist/routes/*.js"),
+    "./src/routes/*.ts",
+    "./routes/*.js",
+  ],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
@@ -41,8 +47,17 @@ app.use(morgan(config.env === "development" ? "dev" : "combined", {
 }));
 app.use(rateLimiter);
 
-// Swagger UI
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// Swagger UI - Use options that improve compatibility with serverless environments
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    customSiteTitle: "Gender Classifier API Docs",
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+);
 
 // API Routes
 app.use("/api", classifyRoutes);
