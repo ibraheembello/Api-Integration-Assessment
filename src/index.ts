@@ -1,9 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import morgan from "morgan";
-import path from "path";
 import swaggerUi from "swagger-ui-express";
-import swaggerJsdoc from "swagger-jsdoc";
 import classifyRoutes from "./routes/classify.routes";
 import { config } from "./config";
 import { logger } from "./utils/logger";
@@ -12,32 +10,72 @@ import { rateLimiter } from "./middleware/rate-limit.middleware";
 
 const app: Application = express();
 
-// Swagger configuration
-const swaggerOptions: swaggerJsdoc.Options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Gender Classification API",
-      version: "1.0.0",
-      description: "A professional API for name gender classification.",
-    },
-    servers: [
-      {
-        url: config.env === "development" ? `http://localhost:${config.port}` : "https://api-integration-assessment.vercel.app/",
-        description: config.env === "development" ? "Local server" : "Production server",
-      },
-    ],
+// Direct Swagger Specification to ensure compatibility with Vercel serverless
+const swaggerSpec = {
+  openapi: "3.0.0",
+  info: {
+    title: "Gender Classification API",
+    version: "1.0.0",
+    description: "A professional API for name gender classification.",
   },
-  // Broaden patterns to ensure Swagger finds the route files in any environment
-  apis: [
-    path.join(process.cwd(), "src/routes/*.ts"),
-    path.join(process.cwd(), "dist/routes/*.js"),
-    "./src/routes/*.ts",
-    "./routes/*.js",
+  servers: [
+    {
+      url: config.env === "development" ? `http://localhost:${config.port}` : "https://api-integration-assessment.vercel.app/",
+      description: config.env === "development" ? "Local server" : "Production server",
+    },
   ],
+  paths: {
+    "/api/classify": {
+      get: {
+        summary: "Classify a name by gender",
+        parameters: [
+          {
+            in: "query",
+            name: "name",
+            required: true,
+            schema: { type: "string" },
+            description: "The name to classify",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Successfully classified the name",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: { $ref: "#/components/schemas/ProcessedData" },
+                  },
+                },
+              },
+            },
+          },
+          400: { description: "Missing or empty name parameter" },
+          404: { description: "No prediction available for the provided name" },
+          422: { description: "Invalid name parameter" },
+          502: { description: "Upstream server failure" },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      ProcessedData: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          gender: { type: "string" },
+          probability: { type: "number" },
+          sample_size: { type: "number" },
+          is_confident: { type: "boolean" },
+          processed_at: { type: "string", format: "date-time" },
+        },
+      },
+    },
+  },
 };
-
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 // Middleware
 app.use(cors({ origin: "*" }));
@@ -47,15 +85,12 @@ app.use(morgan(config.env === "development" ? "dev" : "combined", {
 }));
 app.use(rateLimiter);
 
-// Swagger UI - Use options that improve compatibility with serverless environments
+// Swagger UI - Using direct spec object
 app.use(
   "/api-docs",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerDocs, {
+  swaggerUi.setup(swaggerSpec, {
     customSiteTitle: "Gender Classifier API Docs",
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
   })
 );
 
