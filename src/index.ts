@@ -85,18 +85,23 @@ app.use(morgan(config.env === "development" ? "dev" : "combined", {
 }));
 app.use(rateLimiter);
 
-// Swagger UI - Using CDN for assets to ensure compatibility with Vercel serverless
-const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
+/**
+ * Swagger UI Configuration
+ * We use CDN-hosted assets to ensure the documentation loads reliably on Vercel,
+ * bypassing local filesystem restrictions for static assets.
+ */
+const SWAGGER_ASSETS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5";
 
 app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
-    customCssUrl: CSS_URL,
+    customCssUrl: `${SWAGGER_ASSETS_URL}/swagger-ui.min.css`,
+    customJs: [
+      `${SWAGGER_ASSETS_URL}/swagger-ui-bundle.js`,
+      `${SWAGGER_ASSETS_URL}/swagger-ui-standalone-preset.js`,
+    ],
     customSiteTitle: "Gender Classifier API Docs",
-    swaggerOptions: {
-        persistAuthorization: true,
-    }
   })
 );
 
