@@ -1,7 +1,6 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import morgan from "morgan";
-import swaggerUi from "swagger-ui-express";
 import classifyRoutes from "./routes/classify.routes";
 import { config } from "./config";
 import { logger } from "./utils/logger";
@@ -86,24 +85,47 @@ app.use(morgan(config.env === "development" ? "dev" : "combined", {
 app.use(rateLimiter);
 
 /**
- * Swagger UI Configuration
- * We use CDN-hosted assets to ensure the documentation loads reliably on Vercel,
- * bypassing local filesystem restrictions for static assets.
+ * Bulletproof Swagger UI for Vercel
+ * We serve a custom HTML page that loads everything from CDN and embeds the spec.
+ * This avoids all issues with local static asset serving in serverless environments.
  */
-const SWAGGER_ASSETS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5";
-
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCssUrl: `${SWAGGER_ASSETS_URL}/swagger-ui.min.css`,
-    customJs: [
-      `${SWAGGER_ASSETS_URL}/swagger-ui-bundle.js`,
-      `${SWAGGER_ASSETS_URL}/swagger-ui-standalone-preset.js`,
-    ],
-    customSiteTitle: "Gender Classifier API Docs",
-  })
-);
+app.get("/api-docs", (req: Request, res: Response) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Gender Classifier API Docs</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css" />
+      <style>
+        html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { margin: 0; background: #fafafa; }
+      </style>
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js"></script>
+      <script>
+        window.onload = () => {
+          window.ui = SwaggerUIBundle({
+            spec: ${JSON.stringify(swaggerSpec)},
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+              SwaggerUIBundle.presets.apis,
+              SwaggerUIStandalonePreset
+            ],
+            layout: "StandaloneLayout",
+          });
+        };
+      </script>
+    </body>
+    </html>
+  `);
+});
 
 // API Routes
 app.use("/api", classifyRoutes);
