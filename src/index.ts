@@ -10,7 +10,7 @@ import { rateLimiter } from "./middleware/rate-limit.middleware";
 
 const app: Application = express();
 
-// Direct Swagger Specification to ensure compatibility with Vercel serverless
+// Direct Swagger Specification
 const swaggerSpec = {
   openapi: "3.0.0",
   info: {
@@ -85,12 +85,18 @@ app.use(morgan(config.env === "development" ? "dev" : "combined", {
 }));
 app.use(rateLimiter);
 
-// Swagger UI - Using direct spec object
+// Swagger UI - Using CDN for assets to ensure compatibility with Vercel serverless
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
+
 app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
+    customCssUrl: CSS_URL,
     customSiteTitle: "Gender Classifier API Docs",
+    swaggerOptions: {
+        persistAuthorization: true,
+    }
   })
 );
 
